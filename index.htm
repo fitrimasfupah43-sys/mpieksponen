@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>MPI Bilangan Berpangkat</title>
+<style>
+  /* ====== KONFIGURASI WARNA (Tema: Oranye - Biru) ====== */
+  :root {
+    --primary: #0F4C81;        /* Biru Klasik Premium */
+    --primary-tua: #0A3356;    /* Biru Gelap */
+    --accent: #F58220;         /* Oranye Vibrant */
+    --accent-tua: #D35400;     /* Oranye Gelap */
+    --tinta: #1D3557;          /* Warna Teks Utama */
+    --krem: #FFFFFF;           /* Latar Belakang Kartu */
+    --krem-2: #F0F4F8;         /* Latar Belakang Body (Soft Blue-Gray) */
+    --garis: #D1DBE5;          /* Pembatas Elemen */
+    --hijau: #10B981;          /* Jawaban Benar / Sukses */
+    --hijau-tua: #047857;      
+    --salah: #EF4444;          /* Jawaban Salah */
+    --biru-muda: #E6F0FA;      /* Highlight Lembut */
+    --bayang: 0 16px 32px rgba(15, 76, 129, 0.15);
+    --bayang-kecil: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* ====== RESET & DASAR LAYOUT ====== */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--krem-2);
+    color: var(--tinta);
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* ====== STRUKTUR CONTAINER UTAMA ====== */
+  #app {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    margin: 0 auto;
+    background: var(--krem);
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+  
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-tua));
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  header button {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  header button:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+  header .title-area { flex: 1; min-width: 0; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header p { margin: 2px 0 0; font-size: 12px; opacity: 0.8; }
+
+  /* KONTEN UTAMA */
+  .main-content {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
+  }
+  
+  /* SISTEM HALAMAN (PAGES) */
+  .page {
+    display: none;
+    width: 100%;
+    height: auto;
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  .page.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ====== TOMBOL GLOBAL ====== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 8px;
+    outline: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-tua)); color: white; box-shadow: 0 8px 16px rgba(245, 130, 32, 0.25); }
+  .btn-primary:active { background: var(--accent-tua); }
+  .btn-secondary { background: var(--biru-muda); color: var(--primary); }
+  .btn-border { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+  .btn-success { background: var(--hijau); color: white; }
+  .btn-danger { background: var(--salah); color: white; }
+
+  /* ====== HALAMAN 1: WELCOME ====== */
+  .welcome-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 10px 30px;
+  }
+  .logo-box {
+    width: 130px;
+    height: 130px;
+    background: linear-gradient(135deg, var(--accent), #FFB74D);
+    border-radius: 36px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    color: white;
+    box-shadow: 0 15px 30px rgba(245, 130, 32, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-box::after {
+    content: '';
+    position: absolute;
+    width: 150%; height: 150%;
+    background: linear-gradient(rgba(255,255,255,0.15), transparent);
+    top: -20%; left: -20%;
+    transform: rotate(45deg);
+  }
+  .welcome-screen h2 { font-size: 24px; font-weight: 900; color: var(--primary); margin: 0 0 8px; }
+  .welcome-screen .sub { font-size: 14px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+  .welcome-screen .desc { font-size: 14px; line-height: 1.6; color: var(--tinta); opacity: 0.8; margin-bottom: 25px; }
+  
+  .form-identitas {
+    width: 100%;
+    background: var(--krem-2);
+    padding: 20px;
+    border-radius: 24px;
+    border: 1px solid var(--garis);
+    margin-bottom: 25px;
+    text-align: left;
+  }
+  .form-identitas label { display: block; font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 6px; text-transform: uppercase; }
+  .form-identitas input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--garis);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tinta);
+    outline: none;
+    transition: all 0.2s;
+    margin-bottom: 15px;
+  }
+  .form-identitas input:focus { border-color: var(--primary); background: #fff; }
+  .form-identitas input::placeholder { opacity: 0.4; }
+  
+  /* ====== HALAMAN 2: MENU UTAMA ====== */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 5px;
+  }
+  .menu-card {
+    background: white;
+    border-radius: 24px;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 2px solid var(--krem-2);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--bayang-kecil);
+  }
+  .menu-card:active { transform: translateY(4px); box-shadow: none; border-color: var(--primary); }
+  .menu-card .icon {
+    width: 64px; height: 64px;
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: white; margin-bottom: 15px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+  }
+  .menu-card.belajar .icon { background: linear-gradient(135deg, var(--primary), #3B82F6); }
+  .menu-card.bermain .icon { background: linear-gradient(135deg, var(--accent), #FF9F43); }
+  .menu-card.berlatih .icon { background: linear-gradient(135deg, var(--hijau), #10B981); }
+  .menu-card.tentang .icon { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
+  .menu-card h3 { margin: 0 0 5px; font-size: 15px; font-weight: 900; }
+  .menu-card p { margin: 0; font-size: 11px; opacity: 0.6; line-height: 1.4; }
+
+  /* BANNER GURU */
+  .guru-banner {
+    background: linear-gradient(135deg, var(--primary-tua), var(--primary));
+    color: white;
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: var(--bayang-kecil);
+  }
+  .guru-avatar {
+    width: 60px; height: 60px;
+    border-radius: 18px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .guru-info h4 { margin: 0 0 4px; font-size: 16px; font-weight: 800; }
+  .guru-info p { margin: 0; font-size: 11px; opacity: 0.8; line-height: 1.4; }
+
+  /* ====== HALAMAN 3: BELAJAR (SUB-MATERI) ====== */
+  .materi-list { display: flex; flex-direction: column; gap: 12px; }
+  .materi-card {
+    background: white;
+    border-radius: 18px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 2px solid var(--krem-2);
+    cursor: pointer;
+    box-shadow: var(--bayang-kecil);
+    transition: all 0.2s;
+  }
+  .materi-card:active { transform: translateX(5px); border-color: var(--primary); }
+  .materi-card .num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--biru-muda);
+    color: var(--primary);
+    font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .materi-card .text { flex: 1; font-size: 14px; font-weight: 800; color: var(--tinta); }
+  .materi-card .arrow { color: var(--primary); opacity: 0.5; font-weight: 900; }
+
+  /* BACAAN DAN KUIS DI BELAJAR */
+  .bacaan-wrapper { font-size: 15px; line-height: 1.7; color: var(--tinta); }
+  .bacaan-wrapper h3 { font-size: 18px; font-weight: 800; color: var(--primary); margin-top: 0; border-left: 4px solid var(--accent); padding-left: 10px; }
+  .bacaan-wrapper p { margin-bottom: 12px; }
+  .bacaan-wrapper ul { padding-left: 20px; margin-bottom: 15px; }
+  .bacaan-wrapper li { margin-bottom: 6px; }
+  
+  .rumus {
+    background: var(--krem-2);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    margin: 15px 0;
+    font-size: 16px;
+    overflow-x: auto;
+    border: 1px dashed var(--primary);
+  }
+  .highlight-box {
+    background: #FFF9E6;
+    border-left: 4px solid var(--accent);
+    padding: 12px 15px;
+    border-radius: 0 12px 12px 0;
+    font-size: 13px;
+    margin: 15px 0;
+  }
+
+  .kuis-materi-box {
+    background: var(--krem-2);
+    border-radius: 20px;
+    padding: 20px;
+    margin-top: 30px;
+    border: 1px solid var(--garis);
+  }
+  .kuis-materi-box h4 { margin: 0 0 10px; color: var(--accent-tua); font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+  .kuis-materi-box .soal { font-size: 15px; font-weight: 700; margin-bottom: 15px; }
+  
+  .opsi-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+  .opsi-btn {
+    background: white;
+    border: 2px solid var(--garis);
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--tinta);
+  }
+  .opsi-btn:active { background: var(--krem-2); }
+  .opsi-btn.terpilih { border-color: var(--primary); background: var(--biru-muda); }
+  .opsi-btn.benar { border-color: var(--hijau); background: #E8F8F0; color: var(--hijau-tua); }
+  .opsi-btn.salah { border-color: var(--salah); background: #FEECEB; color: var(--salah); }
+
+  .pembahasan-box {
+    background: #EBF7FF;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.5;
+    border-left: 4px solid var(--primary);
+    display: none;
+  }
+
+  /* ====== HALAMAN 4: BERMAIN (HUBUNGKAN KARTU) ====== */
+  .game-instruksi { font-size: 13px; text-align: center; margin-bottom: 15px; opacity: 0.8; }
+  .game-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .game-col { display: flex; flex-direction: column; gap: 8px; }
+  .game-card {
+    background: white;
+    border: 2px solid var(--garis);
+    border-radius: 12px;
+    padding: 12px 8px;
+    min-height: 55px;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  }
+  .game-card.pilih { border-color: var(--accent); background: #FFF3E0; transform: scale(1.02); }
+  .game-card.cocok { background: #E8F8F0; border-color: var(--hijau); color: var(--hijau-tua); pointer-events: none; opacity: 0.6; }
+  .game-card.gagal { border-color: var(--salah); background: #FEECEB; animation: shake 0.3s ease-in-out; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  /* ====== HALAMAN 5: BERLATIH (EVALUASI) ====== */
+  .progress-bar-container {
+    width: 100%; height: 8px;
+    background: var(--garis);
+    border-radius: 4px; margin-bottom: 15px;
+    overflow: hidden;
+  }
+  .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; }
+  .latih-info { display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 15px; }
+  
+  .latih-soal { font-size: 16px; font-weight: 800; line-height: 1.6; margin-bottom: 20px; }
+  .latih-opsi { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+  .latih-btn {
+    background: white;
+    border: 2px solid var(--garis);
+    border-radius: 16px;
+    padding: 15px 20px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--tinta);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .latih-btn .opsi-abjad {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--krem-2);
+    color: var(--tinta);
+    font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .latih-btn.pilih { border-color: var(--primary); background: var(--biru-muda); }
+  .latih-btn.pilih .opsi-abjad { background: var(--primary); color: white; }
+
+  /* SKOR AKHIR */
+  .akhir-screen { text-align: center; padding: 20px 10px; }
+  .akhir-screen h2 { font-size: 24px; font-weight: 900; color: var(--primary); margin: 0 0 5px; }
+  .akhir-screen .murid-info { font-size: 14px; font-weight: 700; opacity: 0.7; margin-bottom: 25px; }
+  .skor-lingkaran {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #FFB74D);
+    margin: 0 auto 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: white;
+    box-shadow: 0 15px 30px rgba(245, 130, 32, 0.2);
+  }
+  .skor-lingkaran .nilai { font-size: 48px; font-weight: 950; line-height: 1; }
+  .skor-lingkaran .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; opacity: 0.9; }
+  .akhir-screen .ket { font-size: 15px; line-height: 1.6; font-weight: 700; margin-bottom: 30px; }
+
+  /* ====== HALAMAN 6: TENTANG DEVELOEPR ====== */
+  .tentang-screen { text-align: center; padding: 10px; }
+  .tentang-avatar {
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #3B82F6);
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; color: white;
+    box-shadow: var(--bayang);
+  }
+  .tentang-screen h3 { font-size: 20px; font-weight: 900; margin: 0 0 5px; color: var(--primary); }
+  .tentang-screen .jabatan { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 25px; }
+  
+  .spek-table {
+    text-align: left;
+    background: var(--krem-2);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--garis);
+  }
+  .spek-row { display: flex; padding: 10px 0; border-bottom: 1px solid var(--garis); font-size: 13px; }
+  .spek-row:last-child { border-bottom: none; }
+  .spek-label { width: 100px; font-weight: 800; color: var(--primary); }
+  .spek-val { flex: 1; font-weight: 700; color: var(--tinta); }
+
+  /* ====== MODAL DIALOG CUSTOM (NO ALERT) ====== */
+  .modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 76, 129, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .modal-box {
+    background: white;
+    width: 100%;
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    transform: translateY(20px);
+    animation: slideUp 0.25s ease-out forwards;
+  }
+  @keyframes slideUp { to { transform: translateY(0); } }
+  .modal-box .icon { font-size: 44px; margin-bottom: 15px; }
+  .modal-box h4 { margin: 0 0 10px; font-size: 18px; font-weight: 800; color: var(--primary); }
+  .modal-box p { margin: 0 0 20px; font-size: 14px; line-height: 1.5; opacity: 0.8; }
+  .modal-buttons { display: flex; gap: 10px; }
+  
+  /* MATHJAX MOBILE ADJUSTMENT */
+  .MathJax { font-size: 0.95em !important; }
+</style>
+
+<!-- Load Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Load MathJax for LaTeX typesetting -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <!-- HEADER -->
+  <header>
+    <button id="back-btn" onclick="goBack()" style="visibility: hidden;">←</button>
+    <div class="title-area">
+      <h1 id="header-title">MPI Eksponen</h1>
+      <p id="header-subtitle">Matematika Kelas X</p>
+    </div>
+    <div style="font-size: 24px;">🧮</div>
+  </header>
+
+  <!-- KONTEN UTAMA -->
+  <div class="main-content" id="scroll-container">
+    
+    <!-- HALAMAN 1: WELCOME SCREEN -->
+    <div id="page-welcome" class="page active">
+      <div class="welcome-screen">
+        <div class="logo-box"><span>aⁿ</span></div>
+        <h2 id="welcome-title">Bilangan Berpangkat</h2>
+        <div class="sub" id="welcome-sub">Matematika • Kelas X</div>
+        <p class="desc" id="welcome-desc">Selamat datang! Di sini kita akan menjelajahi konsep eksponen, menguji pemahaman melalui permainan interaktif, dan mengerjakan kuis evaluasi untuk mengasah kemampuanmu.</p>
+        
+        <div class="form-identitas">
+          <label for="input-nama">Nama Lengkap</label>
+          <input type="text" id="input-nama" placeholder="Masukkan nama kamu..." autocomplete="off">
+          
+          <label for="input-sekolah">Sekolah / Kelas</label>
+          <input type="text" id="input-sekolah" placeholder="Contoh: SMAN 3 Pandeglang - X.1" autocomplete="off">
+        </div>
+        
+        <button class="btn btn-primary" onclick="mulaiBelajar()">Mulai Petualangan 🚀</button>
+      </div>
+    </div>
+
+    <!-- HALAMAN 2: MENU UTAMA -->
+    <div id="page-menu" class="page">
+      <div class="guru-banner">
+        <div class="guru-avatar">👩‍🏫</div>
+        <div class="guru-info">
+          <h4 id="guru-nama">Fitri Masfupah, S.Pd</h4>
+          <p id="guru-sekolah">SMAN 3 Pandeglang</p>
+        </div>
+      </div>
+      
+      <div class="menu-grid">
+        <div class="menu-card belajar" onclick="goPage('page-belajar-menu')">
+          <div class="icon">📖</div>
+          <h3>Belajar</h3>
+          <p>Materi & kuis pemahaman</p>
+        </div>
+        <div class="menu-card bermain" onclick="mulaiBermain()">
+          <div class="icon">🎮</div>
+          <h3>Bermain</h3>
+          <p>Hubungkan sifat eksponen</p>
+        </div>
+        <div class="menu-card berlatih" onclick="mulaiBerlatih()">
+          <div class="icon">📝</div>
+          <h3>Berlatih</h3>
+          <p>Uji kompetensi evaluasi</p>
+        </div>
+        <div class="menu-card tentang" onclick="goPage('page-tentang')">
+          <div class="icon">ℹ️</div>
+          <h3>Tentang</h3>
+          <p>Info MPI & Pengembang</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HALAMAN 3A: LIST SUB-MATERI -->
+    <div id="page-belajar-menu" class="page">
+      <div class="materi-list" id="daftar-materi">
+        <!-- Generasi dinamis materi -->
+      </div>
+    </div>
+
+    <!-- HALAMAN 3B: BACAAN MATERI & MINI KUIS -->
+    <div id="page-belajar-isi" class="page">
+      <div class="bacaan-wrapper" id="materi-bacaan">
+        <!-- Bacaan materi dinamis -->
+      </div>
+      
+      <!-- Box Mini Kuis -->
+      <div class="kuis-materi-box">
+        <h4>Uji Pemahaman Cepat ⚡</h4>
+        <div class="soal" id="kuis-materi-soal">...</div>
+        <div class="opsi-list" id="kuis-materi-opsi">
+          <!-- Opsi dinamis -->
+        </div>
+        <button class="btn btn-primary" id="kuis-materi-btn" onclick="submitKuisMateri()">Periksa Jawaban</button>
+        <div class="pembahasan-box" id="kuis-materi-pembahasan"></div>
+      </div>
+      
+      <div style="margin-top: 25px; display: flex; gap: 10px;">
+        <button class="btn btn-secondary" onclick="goPage('page-belajar-menu')">↩ Kembali ke Menu Materi</button>
+      </div>
+    </div>
+
+    <!-- HALAMAN 4: BERMAIN (GAME MATCHING) -->
+    <div id="page-bermain" class="page">
+      <div class="game-instruksi">
+        Pasangkan kartu soal di sebelah <b>kiri</b> dengan nilai penyederhanaan yang tepat di sebelah <b>kanan</b>!
+      </div>
+      <div class="game-grid">
+        <div class="game-col" id="game-left"></div>
+        <div class="game-col" id="game-right"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="resetBermain()">🔄 Acak Ulang Permainan</button>
+    </div>
+
+    <!-- HALAMAN 5A: BERLATIH (SOAL EVALUASI) -->
+    <div id="page-berlatih" class="page">
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="latih-progress"></div>
+      </div>
+      <div class="latih-info">
+        <span id="latih-nomor">Soal 1 dari 10</span>
+        <span id="latih-timer">Waktu berjalan...</span>
+      </div>
+      <div class="latih-soal" id="latih-soal-text">
+        <!-- Soal dinamis -->
+      </div>
+      <div class="latih-opsi" id="latih-opsi-list">
+        <!-- Pilihan jawaban dinamis -->
+      </div>
+      <button class="btn btn-primary" id="latih-next-btn" onclick="nextSoalLatih()">Pertanyaan Berikutnya ➔</button>
+    </div>
+
+    <!-- HALAMAN 5B: SKOR EVALUASI AKHIR -->
+    <div id="page-skor-akhir" class="page">
+      <div class="akhir-screen">
+        <div class="logo-box" style="background: linear-gradient(135deg, var(--primary), var(--primary-tua)); font-size: 50px;">🎉</div>
+        <h2>Kerja Bagus, Luar Biasa!</h2>
+        <div class="murid-info" id="akhir-murid-info">Nama • Sekolah</div>
+        
+        <div class="skor-lingkaran">
+          <span class="nilai" id="akhir-nilai">100</span>
+          <span class="label">Skor Akhir</span>
+        </div>
+        
+        <div class="ket" id="akhir-keterangan">Selamat! Pemahamanmu terhadap sifat-sifat bilangan berpangkat sangat mengagumkan.</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn btn-primary" onclick="mulaiBerlatih()">🔄 Ulangi Ujian Evaluasi</button>
+          <button class="btn btn-secondary" onclick="goPage('page-menu')">☰ Kembali ke Menu Utama</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HALAMAN 6: TENTANG DEVELOPER -->
+    <div id="page-tentang" class="page">
+      <div class="tentang-screen">
+        <div class="tentang-avatar">👩‍💻</div>
+        <h3 id="tentang-guru">Fitri Masfupah, S.Pd</h3>
+        <div class="jabatan">Pengembang Media Pembelajaran</div>
+        
+        <div class="spek-table">
+          <div class="spek-row">
+            <div class="spek-label">Asal Sekolah</div>
+            <div class="spek-val" id="tentang-sekolah">SMAN 3 Pandeglang</div>
+          </div>
+          <div class="spek-row">
+            <div class="spek-label">Materi</div>
+            <div class="spek-val" id="tentang-topik">Bilangan Berpangkat (Eksponen)</div>
+          </div>
+          <div class="spek-row">
+            <div class="spek-label">Fase / Kelas</div>
+            <div class="spek-val" id="tentang-kelas">Fase E / Kelas X</div>
+          </div>
+          <div class="spek-row">
+            <div class="spek-label">Tujuan Pembelajaran</div>
+            <div class="spek-val" style="font-size:11px; line-height: 1.4; text-align: justify;" id="tentang-tujuan">Menggeneralisasi sifat-sifat bilangan berpangkat (termasuk bilangan pangkat pecahan) dan menggunakannya untuk menyelesaikan masalah.</div>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="goPage('page-menu')">Kembali ke Menu Utama</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CUSTOM DIALOG BOX OVERLAY -->
+  <div class="modal-overlay" id="dialog-overlay">
+    <div class="modal-box">
+      <div class="icon" id="dialog-icon">⚠️</div>
+      <h4 id="dialog-title">Informasi</h4>
+      <p id="dialog-desc">Keterangan pesan di sini.</p>
+      <div class="modal-buttons">
+        <button class="btn btn-primary" style="padding:10px 20px;" onclick="closeDialog()">Mengerti</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ====== JAVASCRIPT CONFIGURATION & DATA MATERI ======
+  const CONFIG = {
+    mapel: "Matematika",
+    kelas: "X",
+    fase: "E",
+    topik: "Bilangan Berpangkat",
+    tujuan: "Menggeneralisasi sifat-sifat bilangan berpangkat (termasuk bilangan pangkat pecahan) dan menggunakannya untuk menyelesaikan masalah.",
+    namaGuru: "Fitri Masfupah, S.Pd",
+    asalSekolah: "SMAN 3 Pandeglang",
+    pembuka: "Selamat datang di Media Pembelajaran Interaktif Bilangan Berpangkat. Di sini kita akan mempelajari materi secara menyenangkan, bermain game menghubungkan sifat, dan menguji kemampuanmu dalam latihan soal evaluasi!"
+  };
+
+  const MATERI = [
+    {
+      sub: "1. Pengertian & Pangkat Bulat Positif",
+      bacaan: `
+        <h3>Materi 1: Pengertian & Pangkat Bulat Positif</h3>
+        <p>Bilangan berpangkat (eksponen) adalah perkalian berulang dari suatu bilangan yang sama. Jika $a$ adalah bilangan real dan $n$ adalah bilangan bulat positif, maka pangkat $n$ dari $a$ ditulis $a^n$ didefinisikan sebagai:</p>
+        <div class="rumus">$$a^n = \\underbrace{a \\times a \\times a \\times \\dots \\times a}_{n \\text{ faktor}}$$</div>
+        <p>Di mana:</p>
+        <ul>
+          <li><b>$a$</b> disebut sebagai <b>bilangan pokok (basis)</b></li>
+          <li><b>$n$</b> disebut sebagai <b>pangkat (eksponen)</b></li>
+        </ul>
+        <div class="highlight-box">
+          <b>Sifat Perkalian & Pembagian Dasar:</b><br>
+          • $a^m \\times a^n = a^{m+n}$ (pangkat dijumlahkan)<br>
+          • $\\frac{a^m}{a^n} = a^{m-n}$ (pangkat dikurangkan)
+        </div>
+        <p><b>Contoh Soal:</b></p>
+        <ul>
+          <li>$2^3 \\times 2^4 = 2^{3+4} = 2^7 = 128$</li>
+          <li>$\\frac{5^6}{5^4} = 5^{6-4} = 5^2 = 25$</li>
+        </ul>
+      `,
+      tanya: "Berapakah hasil penyederhanaan dari $\\frac{3^7 \\times 3^2}{3^6}$ ?",
+      pilihan: ["9", "27", "81", "3"],
+      kunci: 1,
+      pembahasan: "Menggunakan sifat dasar eksponen: $\\frac{3^7 \\times 3^2}{3^6} = \\frac{3^{7+2}}{3^6} = \\frac{3^9}{3^6} = 3^{9-6} = 3^3 = 27$."
+    },
+    {
+      sub: "2. Pangkat Bulat Negatif dan Nol",
+      bacaan: `
+        <h3>Materi 2: Pangkat Bulat Negatif dan Nol</h3>
+        <p>Bagaimana jika eksponennya berupa bilangan nol atau bilangan negatif? Berikut definisinya:</p>
+        <p><b>1. Pangkat Nol:</b> Untuk setiap bilangan real $a$ dengan $a \\neq 0$, berlaku:</p>
+        <div class="rumus">$$a^0 = 1$$</div>
+        <p>Semua bilangan (kecuali nol) jika dipangkatkan $0$ hasilnya adalah selalu $1$. Contoh: $100^0 = 1$ dan $(-5)^0 = 1$.</p>
+        <p><b>2. Pangkat Negatif:</b> Untuk setiap bilangan real $a$ dengan $a \\neq 0$ dan $n$ bilangan bulat positif, berlaku:</p>
+        <div class="rumus">$$a^{-n} = \\frac{1}{a^n} \\quad \\text{atau} \\quad \\frac{1}{a^{-n}} = a^n$$</div>
+        <p>Pangkat negatif menunjukkan kebalikan nilai berpangkat positifnya.</p>
+        <p><b>Contoh:</b> $2^{-3} = \\frac{1}{2^3} = \\frac{1}{8}$.</p>
+      `,
+      tanya: "Bentuk sederhana ber-eksponen positif dari $\\frac{4 a^{-2}}{b^{-3}}$ adalah...",
+      pilihan: ["$\\frac{4b^3}{a^2}$", "$\\frac{b^3}{4a^2}$", "$\\frac{4a^2}{b^3}$", "$\\frac{1}{4a^2b^3}$"],
+      kunci: 0,
+      pembahasan: "Ubah variabel berpangkat negatif agar nilainya menjadi positif: $a^{-2}$ dipindahkan ke penyebut menjadi $a^2$, dan $b^{-3}$ dipindahkan ke pembilang menjadi $b^3$. Maka, bentuknya menjadi $\\frac{4b^3}{a^2}$."
+    },
+    {
+      sub: "3. Sifat-Sifat Operasi Eksponen",
+      bacaan: `
+        <h3>Materi 3: Sifat-Sifat Operasi Eksponen</h3>
+        <p>Agar dapat memecahkan masalah matematika yang lebih kompleks, kita perlu menguasai 3 sifat penting operasi eksponen berikut:</p>
+        <p><b>1. Perpangkatan Bilangan Berpangkat:</b></p>
+        <div class="rumus">$$(a^m)^n = a^{m \\times n}$$</div>
+        <p><b>2. Perpangkatan dari Perkalian Dua Bilangan:</b></p>
+        <div class="rumus">$$(a \\cdot b)^n = a^n \\cdot b^n$$</div>
+        <p><b>3. Perpangkatan dari Pembagian Dua Bilangan:</b></p>
+        <div class="rumus">$$\\left(\\frac{a}{b}\\right)^n = \\frac{a^n}{b^n}$$</div>
+        <p><b>Contoh:</b> $(2^2 a^3)^3 = 2^{2 \\times 3} \\cdot a^{3 \\times 3} = 2^6 a^9 = 64a^9$.</p>
+      `,
+      tanya: "Bentuk paling sederhana dari $(3a^2 b^3)^2$ adalah...",
+      pilihan: ["$6a^4 b^5$", "$9a^4 b^6$", "$9a^4 b^5$", "$3a^4 b^6$"],
+      kunci: 1,
+      pembahasan: "Kuadratkan masing-masing komponen di dalam kurung: $(3a^2 b^3)^2 = 3^2 \\cdot (a^2)^2 \\cdot (b^3)^2 = 9 \\cdot a^{2 \\times 2} \\cdot b^{3 \\times 2} = 9a^4b^6$."
+    },
+    {
+      sub: "4. Pangkat Pecahan & Bentuk Akar",
+      bacaan: `
+        <h3>Materi 4: Pangkat Pecahan & Bentuk Akar</h3>
+        <p>Pangkat pecahan merupakan representasi lain dari bentuk akar. Jika kita memiliki basis berpangkat pecahan, hubungannya dengan bentuk akar didefinisikan sebagai berikut:</p>
+        <div class="rumus">$$a^{\\frac{m}{n}} = \\sqrt[n]{a^m}$$</div>
+        <p>Di mana $a \\ge 0$, $m$ adalah bilangan bulat, dan $n$ adalah bilangan bulat positif ($n \\ge 2$).</p>
+        <p>Sifat eksponen pangkat pecahan sepenuhnya sama dengan sifat pangkat bulat.</p>
+        <p><b>Contoh Mengubah dan Menghitung:</b></p>
+        <ul>
+          <li>$\\sqrt{9} = 9^{\\frac{1}{2}} = (3^2)^{\\frac{1}{2}} = 3^1 = 3$</li>
+          <li>$8^{\\frac{2}{3}} = (2^3)^{\\frac{2}{3}} = 2^{3 \\times \\frac{2}{3}} = 2^2 = 4$</li>
+        </ul>
+      `,
+      tanya: "Berapakah hasil nilai numerik dari $25^{\\frac{3}{2}}$?",
+      pilihan: ["15", "75", "125", "50"],
+      kunci: 2,
+      pembahasan: "Nyatakan 25 sebagai bilangan berpangkat: $25 = 5^2$. Maka, $25^{\\frac{3}{2}} = (5^2)^{\\frac{3}{2}} = 5^{2 \\times \\frac{3}{2}} = 5^3 = 5 \\times 5 \\times 5 = 125$."
+    }
+  ];
+
+  // 10 Pasangan Kartu Game Bermain (Kiri Soal, Kanan Jawaban)
+  const dataBermain = [
+    { q: "$2^3 \\times 2^2$", a: "$2^5 = 32$" },
+    { q: "$3^{-1}$", a: "$\\frac{1}{3}$" },
+    { q: "$(5^2)^3$", a: "$5^6$" },
+    { q: "$100^0$", a: "$1$" },
+    { q: "$16^{\\frac{1}{2}}$", a: "$4$" },
+    { q: "$27^{\\frac{1}{3}}$", a: "$3$" },
+    { q: "$y^7 \\div y^4$", a: "$y^3$" },
+    { q: "$(ab)^4$", a: "$a^4 b^4$" },
+    { q: "$8^{\\frac{2}{3}}$", a: "$4$" },
+    { q: "$\\frac{x^{-2}}{y^{-3}}$", a: "$\\frac{y^3}{x^2}$" }
+  ];
+
+  // 10 Soal Evaluasi Kompetensi Akhir
+  const dtLatih = [
+    {
+      tanya: "Berapakah hasil penyederhanaan eksponen dari $\\frac{2^5 \\cdot 3^4}{2^2 \\cdot 3^2}$ ?",
+      pilihan: ["36", "72", "18", "144"],
+      kunci: 0,
+      pembahasan: "$\\frac{2^5 \\cdot 3^4}{2^2 \\cdot 3^2} = 2^{5-2} \\cdot 3^{4-2} = 2^3 \\cdot 3^2 = 8 \\cdot 9 = 72$. Maaf, 8 x 9 = 72, mari kita hitung kembali: $2^{5-2}=2^3=8$ dan $3^{4-2}=3^2=9$. Hasilnya $8 \\times 9 = 72$. (Kunci index 1: 72)"
+    },
+    {
+      tanya: "Bentuk sederhana dari $(3x^4 y^{-2})^3$ adalah...",
+      pilihan: ["$9x^{12} y^{-6}$", "$27x^{12} y^{-6}$", "$27x^7 y^1$", "$9x^7 y^{-6}$"],
+      kunci: 1,
+      pembahasan: "$(3x^4 y^{-2})^3 = 3^3 \\cdot (x^4)^3 \\cdot (y^{-2})^3 = 27x^{12}y^{-6}$."
+    },
+    {
+      tanya: "Hitunglah nilai numerik dari $125^{\\frac{2}{3}} - 8^{\\frac{1}{3}}$!",
+      pilihan: ["23", "24", "121", "13"],
+      kunci: 0,
+      pembahasan: "$125^{\\frac{2}{3}} = (5^3)^{\\frac{2}{3}} = 5^2 = 25$. Sedangkan $8^{\\frac{1}{3}} = (2^3)^{\\frac{1}{3}} = 2^1 = 2$. Jadi, $25 - 2 = 23$."
+    },
+    {
+      tanya: "Bentuk sederhana dari $\\frac{a^{-2} + b^{-1}}{a^{-2} b^{-1}}$ adalah...",
+      pilihan: ["$a^2 + b$", "$b + a^2$", "$a^2 b + 1$", "$b + a^2 b$"],
+      kunci: 0,
+      pembahasan: "$\\frac{a^{-2} + b^{-1}}{a^{-2} b^{-1}} = \\frac{\\frac{1}{a^2} + \\frac{1}{b}}{\\frac{1}{a^2 b}} = \\frac{\\frac{b + a^2}{a^2 b}}{\\frac{1}{a^2 b}} = b + a^2 = a^2 + b$."
+    },
+    {
+      tanya: "Jika nilai $a = 4$ dan $b = 2$, tentukan nilai dari $\\frac{a^{-1} \\cdot b^3}{a^{-2} \\cdot b^{-1}}$!",
+      pilihan: ["32", "64", "16", "128"],
+      kunci: 1,
+      pembahasan: "Sederhanakan ekspresi terlebih dahulu: $\\frac{a^{-1} b^3}{a^{-2} b^{-1}} = a^{-1 - (-2)} b^{3 - (-1)} = a^1 b^4$. Masukkan nilai: $4 \\cdot 2^4 = 4 \\cdot 16 = 64$."
+    },
+    {
+      tanya: "Hasil perhitungan pecahan berpangkat dari $9^{\\frac{1}{2}} + 27^{\\frac{2}{3}} - 16^{\\frac{3}{4}}$ adalah...",
+      pilihan: ["2", "4", "6", "12"],
+      kunci: 1,
+      pembahasan: "• $9^{\\frac{1}{2}} = (3^2)^{\\frac{1}{2}} = 3$.<br>• $27^{\\frac{2}{3}} = (3^3)^{\\frac{2}{3}} = 3^2 = 9$.<br>• $16^{\\frac{3}{4}} = (2^4)^{\\frac{3}{4}} = 2^3 = 8$.<br>Hasil: $3 + 9 - 8 = 4$."
+    },
+    {
+      tanya: "Bentuk pangkat pecahan positif dari $\\sqrt[3]{p^2 \\cdot \\sqrt{p}}$ adalah...",
+      pilihan: ["$p^{\\frac{5}{6}}$", "$p^{\\frac{1}{3}}$", "$p^{\\frac{2}{3}}$", "$p^{\\frac{1}{6}}$"],
+      kunci: 0,
+      pembahasan: "Sederhanakan isi akar terdalam: $p^2 \\cdot \\sqrt{p} = p^2 \\cdot p^{\\frac{1}{2}} = p^{\\frac{5}{2}}$. Selanjutnya bentuk akar pangkat 3: $\\sqrt[3]{p^{\\frac{5}{2}}} = (p^{\\frac{5}{2}})^{\\frac{1}{3}} = p^{\\frac{5}{6}}$."
+    },
+    {
+      tanya: "Carilah nilai $x$ yang memenuhi persamaan eksponen sederhana $2^{x+3} = 64$!",
+      pilihan: ["3", "4", "2", "5"],
+      kunci: 0,
+      pembahasan: "Nyatakan 64 dalam bilangan berbasis 2: $64 = 2^6$. Persamaan menjadi $2^{x+3} = 2^6 \\implies x + 3 = 6 ➔ x = 3$."
+    },
+    {
+      tanya: "Sederhanakan ekspresi berpangkat berikut:$\\ ( \\frac{x^3 y^{-2}}{x^{-1} y^3} )^{-1}$!",
+      pilihan: ["$\\frac{y^5}{x^4}$", "$\\frac{x^4}{y^5}$", "$\\frac{y^2}{x^2}$", "$\\frac{x^2}{y^5}$"],
+      kunci: 0,
+      pembahasan: "Bagian dalam: $\\frac{x^3 y^{-2}}{x^{-1} y^3} = x^{3 - (-1)} y^{-2 - 3} = x^4 y^{-5}$. Dipangkatkan $-1$: $(x^4 y^{-5})^{-1} = x^{-4} y^5 = \\frac{y^5}{x^4}$."
+    },
+    {
+      tanya: "Dalam suatu eksperimen laboratorium, sebuah koloni bakteri membelah diri menjadi 2 setiap 15 menit sekali. Jika pada awal pengamatan terdapat 20 bakteri, berapa banyak bakteri yang terbentuk setelah 1 jam?",
+      pilihan: ["320 bakteri", "160 bakteri", "640 bakteri", "1280 bakteri"],
+      kunci: 0,
+      pembahasan: "Waktu total = 1 jam = 60 menit. Banyak periode pembelahan $n = \\frac{60}{15} = 4$ kali. Banyak bakteri akhir = $P_0 \\times 2^n = 20 \\times 2^4 = 20 \\times 16 = 320$ bakteri."
+    }
+  ];
+
+  // Memperbaiki pembetulan kunci jawaban soal 1 dtLatih menjadi index 1
+  dtLatih[0].kunci = 1; 
+
+  // ====== ALUR & STATE SISTEM (STATE MANAGEMENT) ======
+  let historyPage = [];
+  let userIdentitas = { nama: "", sekolah: "" };
+  let kuisMateriTerpilih = null;
+  let activeMateriIndex = 0;
+  
+  // Game state
+  let bermainKiri = null;
+  let bermainKanan = null;
+  let bermainSelesaiCount = 0;
+
+  // Latih state
+  let latihIndex = 0;
+  let latihSkor = 0;
+  let latihTerpilih = null;
+  let latihStartTime = 0;
+  let latihInterval = null;
+
+  // Audio Synth (Web Audio API) untuk Sound Effects Mandiri
+  let audioCtx = null;
+  function playSound(type) {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'benar') {
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'salah') {
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+      } else if (type === 'bintang') {
+        // Nada sukses akhir
+        let now = audioCtx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+          let o = audioCtx.createOscillator();
+          let g = audioCtx.createGain();
+          o.connect(g); g.connect(audioCtx.destination);
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0.1, now + i*0.08);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.3);
+          o.start(now + i*0.08); o.stop(now + i*0.08 + 0.3);
+        });
+      }
+    } catch(e) { console.log("Audio not supported yet"); }
+  }
+
+  // Navigasi Halaman
+  function goPage(pageId) {
+    playSound('click');
+    const pages = document.querySelectorAll('.page');
+    let currentActive = null;
+    pages.forEach(p => {
+      if (p.classList.contains('active')) currentActive = p.id;
+      p.classList.remove('active');
+    });
+    
+    if (currentActive && currentActive !== pageId) {
+      if (historyPage[historyPage.length - 1] !== currentActive) {
+        historyPage.push(currentActive);
+      }
+    }
+
+    const targetPage = document.getElementById(pageId);
+    targetPage.classList.add('active');
+    
+    // Reset Scroll
+    document.getElementById('scroll-container').scrollTop = 0;
+
+    // Tombol Back Visibility
+    const backBtn = document.getElementById('back-btn');
+    if (pageId === 'page-welcome' || pageId === 'page-menu') {
+      backBtn.style.visibility = 'hidden';
+      historyPage = [];
+    } else {
+      backBtn.style.visibility = 'visible';
+    }
+
+    // Header Title penyesuaian
+    const headTitle = document.getElementById('header-title');
+    const headSub = document.getElementById('header-subtitle');
+    if (pageId === 'page-menu') {
+      headTitle.textContent = CONFIG.topik;
+      headSub.textContent = "Menu Utama MPI";
+    } else if (pageId === 'page-belajar-menu') {
+      headTitle.textContent = "Daftar Materi";
+      headSub.textContent = "Pilih Sub-Materi";
+    } else if (pageId === 'page-belajar-isi') {
+      headTitle.textContent = "Membaca Materi";
+      headSub.textContent = "Belajar Eksponen";
+    } else if (pageId === 'page-bermain') {
+      headTitle.textContent = "Bermain Kartu";
+      headSub.textContent = "Tantangan Hubungkan Sifat";
+    } else if (pageId === 'page-berlatih') {
+      headTitle.textContent = "Evaluasi Mandiri";
+      headSub.textContent = "Uji Kemampuanmu";
+    } else if (pageId === 'page-tentang') {
+      headTitle.textContent = "Informasi MPI";
+      headSub.textContent = "Tentang Developer";
+    }
+  }
+
+  function goBack() {
+    if (historyPage.length > 0) {
+      const prev = historyPage.pop();
+      // Cegah looping ke berlatih jika sedang berlatih
+      if (prev === 'page-berlatih') {
+        // Hentikan timer dan keluar ke menu
+        clearInterval(latihInterval);
+        goPage('page-menu');
+      } else {
+        goPage(prev);
+      }
+    } else {
+      goPage('page-menu');
+    }
+  }
+
+  // Custom Modal Dialog
+  function showDialog(title, desc, icon="⚠️") {
+    document.getElementById('dialog-icon').textContent = icon;
+    document.getElementById('dialog-title').textContent = title;
+    document.getElementById('dialog-desc').textContent = desc;
+    document.getElementById('dialog-overlay').style.display = 'flex';
+  }
+  function closeDialog() {
+    playSound('click');
+    document.getElementById('dialog-overlay').style.display = 'none';
+  }
+
+  // LOAD KONFIGURASI SAAT START
+  window.addEventListener('load', () => {
+    // Inject teks awal dari CONFIG
+    document.getElementById('welcome-title').textContent = CONFIG.topik;
+    document.getElementById('welcome-sub').textContent = CONFIG.mapel + " • Kelas " + CONFIG.kelas + " (" + CONFIG.fase + ")";
+    document.getElementById('welcome-desc').textContent = CONFIG.pembuka;
+    document.getElementById('guru-nama').textContent = CONFIG.namaGuru;
+    document.getElementById('guru-sekolah').textContent = CONFIG.asalSekolah;
+    
+    document.getElementById('tentang-guru').textContent = CONFIG.namaGuru;
+    document.getElementById('tentang-sekolah').textContent = CONFIG.asalSekolah;
+    document.getElementById('tentang-topik').textContent = CONFIG.topik;
+    document.getElementById('tentang-kelas').textContent = "Kelas " + CONFIG.kelas + " / Fase " + CONFIG.fase;
+    document.getElementById('tentang-tujuan').textContent = CONFIG.tujuan;
+
+    // Bikin Daftar Sub-Materi
+    const containerDaftar = document.getElementById('daftar-materi');
+    containerDaftar.innerHTML = '';
+    MATERI.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'materi-card';
+      card.onclick = () => bukaMateri(index);
+      card.innerHTML = `
+        <div class="num">${index + 1}</div>
+        <div class="text">${item.sub}</div>
+        <div class="arrow">➔</div>
+      `;
+      containerDaftar.appendChild(card);
+    });
+  });
+
+  // FLOW USER LOGIN
+  function mulaiBelajar() {
+    const nama = document.getElementById('input-nama').value.trim();
+    const sekolah = document.getElementById('input-sekolah').value.trim();
+    
+    if (!nama || !sekolah) {
+      showDialog("Data Belum Lengkap", "Silakan masukkan Nama Lengkap dan Sekolah/Kelas terlebih dahulu untuk memulai belajar!", "✍️");
+      return;
+    }
+    
+    userIdentitas.nama = nama;
+    userIdentitas.sekolah = sekolah;
+    
+    // Ubah nama profil di halaman skor
+    document.getElementById('akhir-murid-info').textContent = `${userIdentitas.nama} • ${userIdentitas.sekolah}`;
+    
+    goPage('page-menu');
+    showDialog("Halo, " + nama + "!", "Mari kita mulai petualangan seru mempelajari materi Bilangan Berpangkat. Selamat Belajar!", "✨");
+  }
+
+  // ================= BACA MATERI FLOW =================
+  function bukaMateri(index) {
+    activeMateriIndex = index;
+    const m = MATERI[index];
+    
+    // Set bacaan materi
+    document.getElementById('materi-bacaan').innerHTML = m.bacaan;
+    
+    // Set kuis materi
+    document.getElementById('kuis-materi-soal').textContent = m.tanya;
+    const opsiContainer = document.getElementById('kuis-materi-opsi');
+    opsiContainer.innerHTML = '';
+    kuisMateriTerpilih = null;
+    
+    m.pilihan.forEach((p, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'opsi-btn';
+      btn.innerHTML = p;
+      btn.onclick = () => pilihKuisMateri(btn, idx);
+      opsiContainer.appendChild(btn);
+    });
+
+    // Reset tombol & pembahasan
+    const checkBtn = document.getElementById('kuis-materi-btn');
+    checkBtn.textContent = "Periksa Jawaban";
+    checkBtn.disabled = false;
+    checkBtn.className = "btn btn-primary";
+    document.getElementById('kuis-materi-pembahasan').style.display = 'none';
+
+    goPage('page-belajar-isi');
+    
+    // Minta MathJax me-render ulang rumus baru
+    if (window.MathJax) {
+      MathJax.typesetPromise();
+    }
+  }
+
+  function pilihKuisMateri(element, idx) {
+    playSound('click');
+    const buttons = document.querySelectorAll('#kuis-materi-opsi .opsi-btn');
+    buttons.forEach(b => b.classList.remove('terpilih'));
+    element.classList.add('terpilih');
+    kuisMateriTerpilih = idx;
+  }
+
+  function submitKuisMateri() {
+    if (kuisMateriTerpilih === null) {
+      showDialog("Pilih Jawaban", "Pilihlah salah satu opsi jawaban sebelum memeriksa!", "❓");
+      return;
+    }
+
+    const m = MATERI[activeMateriIndex];
+    const buttons = document.querySelectorAll('#kuis-materi-opsi .opsi-btn');
+    const checkBtn = document.getElementById('kuis-materi-btn');
+    
+    // Disable klik lagi
+    buttons.forEach(b => b.style.pointerEvents = 'none');
+    checkBtn.disabled = true;
+
+    const boxPembahasan = document.getElementById('kuis-materi-pembahasan');
+    boxPembahasan.innerHTML = `<b>Pembahasan:</b><br>${m.pembahasan}`;
+    boxPembahasan.style.display = 'block';
+
+    if (kuisMateriTerpilih === m.kunci) {
+      playSound('benar');
+      buttons[kuisMateriTerpilih].classList.add('benar');
+      checkBtn.textContent = "Jawabanmu Benar! 🎉";
+      checkBtn.className = "btn btn-success";
+    } else {
+      playSound('salah');
+      buttons[kuisMateriTerpilih].classList.add('salah');
+      buttons[m.kunci].classList.add('benar');
+      checkBtn.textContent = "Belum Tepat! ❌";
+      checkBtn.className = "btn btn-danger";
+    }
+
+    // Re-render MathJax pembahasannya
+    if (window.MathJax) {
+      MathJax.typesetPromise();
+    }
+  }
+
+
+  // ================= GAME MATCHING FLOW =================
+  function mulaiBermain() {
+    goPage('page-bermain');
+    resetBermain();
+  }
+
+  function resetBermain() {
+    bermainKiri = null;
+    bermainKanan = null;
+    bermainSelesaiCount = 0;
+    
+    // Acak 5 pasang dari total 10 dataBermain agar game bervariasi setiap dibuka
+    const acakData = [...dataBermain].sort(() => Math.random() - 0.5).slice(0, 5);
+    
+    // Buat list kiri (soal) dan kanan (jawaban) secara terpisah lalu acak kembali
+    const listKiri = acakData.map((d, index) => ({ id: index, teks: d.q }));
+    const listKanan = acakData.map((d, index) => ({ id: index, teks: d.a }));
+    
+    listKiri.sort(() => Math.random() - 0.5);
+    listKanan.sort(() => Math.random() - 0.5);
+
+    const divKiri = document.getElementById('game-left');
+    const divKanan = document.getElementById('game-right');
+    
+    divKiri.innerHTML = '';
+    divKanan.innerHTML = '';
+
+    listKiri.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      card.innerHTML = item.teks;
+      card.dataset.id = item.id;
+      card.onclick = () => pilihCardBermain(card, 'kiri');
+      divKiri.appendChild(card);
+    });
+
+    listKanan.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      card.innerHTML = item.teks;
+      card.dataset.id = item.id;
+      card.onclick = () => pilihCardBermain(card, 'kanan');
+      divKanan.appendChild(card);
+    });
+
+    if (window.MathJax) {
+      MathJax.typesetPromise();
+    }
+  }
+
+  function pilihCardBermain(card, sisi) {
+    playSound('click');
+    if (card.classList.contains('cocok')) return;
+
+    if (sisi === 'kiri') {
+      const semuaKiri = document.querySelectorAll('#game-left .game-card');
+      semuaKiri.forEach(c => c.classList.remove('pilih', 'gagal'));
+      card.classList.add('pilih');
+      bermainKiri = card;
+    } else {
+      const semuaKanan = document.querySelectorAll('#game-right .game-card');
+      semuaKanan.forEach(c => c.classList.remove('pilih', 'gagal'));
+      card.classList.add('pilih');
+      bermainKanan = card;
+    }
+
+    // Jika keduanya sudah terpilih, cek kecocokan
+    if (bermainKiri && bermainKanan) {
+      const idKiri = bermainKiri.dataset.id;
+      const idKanan = bermainKanan.dataset.id;
+
+      if (idKiri === idKanan) {
+        // MATCH!
+        playSound('benar');
+        bermainKiri.className = 'game-card cocok';
+        bermainKanan.className = 'game-card cocok';
+        bermainKiri = null;
+        bermainKanan = null;
+        bermainSelesaiCount++;
+
+        // Cek apakah game selesai (5 pasangan)
+        if (bermainSelesaiCount === 5) {
+          playSound('bintang');
+          setTimeout(() => {
+            showDialog("Luar Biasa! ✨", "Kamu berhasil menjodohkan semua sifat-sifat eksponen dengan sempurna! Pertahankan prestasimu.", "🏆");
+          }, 400);
+        }
+      } else {
+        // MISMATCH!
+        playSound('salah');
+        const kTemp = bermainKiri;
+        const knTemp = bermainKanan;
+        
+        kTemp.className = 'game-card gagal';
+        knTemp.className = 'game-card gagal';
+        
+        bermainKiri = null;
+        bermainKanan = null;
+
+        setTimeout(() => {
+          kTemp.classList.remove('gagal', 'pilih');
+          knTemp.classList.remove('gagal', 'pilih');
+        }, 400);
+      }
+    }
+  }
+
+
+  // ================= BERLATIH (EVALUASI) FLOW =================
+  function mulaiBerlatih() {
+    latihIndex = 0;
+    latihSkor = 0;
+    latihTerpilih = null;
+    
+    // Set timer berjalan
+    clearInterval(latihInterval);
+    latihStartTime = Date.now();
+    updateLatihTimer();
+    latihInterval = setInterval(updateLatihTimer, 1000);
+
+    goPage('page-berlatih');
+    tampilkanSoalLatih();
+  }
+
+  function updateLatihTimer() {
+    const elapsed = Math.floor((Date.now() - latihStartTime) / 1000);
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    const formatted = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    document.getElementById('latih-timer').textContent = "⏱️ " + formatted;
+  }
+
+  function tampilkanSoalLatih() {
+    const s = dtLatih[latihIndex];
+    latihTerpilih = null;
+
+    // Info Progress
+    document.getElementById('latih-nomor').textContent = `Soal ${latihIndex + 1} dari ${dtLatih.length}`;
+    const persenProgress = ((latihIndex) / dtLatih.length) * 100;
+    document.getElementById('latih-progress').style.width = `${persenProgress}%`;
+
+    // Judul / Deskripsi Soal
+    document.getElementById('latih-soal-text').innerHTML = s.tanya;
+
+    // Opsi Jawaban
+    const containerOpsi = document.getElementById('latih-opsi-list');
+    containerOpsi.innerHTML = '';
+    const abjad = ["A", "B", "C", "D"];
+
+    s.pilihan.forEach((p, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'latih-btn';
+      btn.onclick = () => pilihJawabanLatih(btn, idx);
+      btn.innerHTML = `
+        <div class="opsi-abjad">${abjad[idx]}</div>
+        <div style="flex:1;">${p}</div>
+      `;
+      containerOpsi.appendChild(btn);
+    });
+
+    // Sesuaikan teks tombol lanjut
+    const nextBtn = document.getElementById('latih-next-btn');
+    if (latihIndex === dtLatih.length - 1) {
+      nextBtn.textContent = "Selesaikan Ujian & Lihat Hasil 🏁";
+    } else {
+      nextBtn.textContent = "Pertanyaan Berikutnya ➔";
+    }
+
+    if (window.MathJax) {
+      MathJax.typesetPromise();
+    }
+  }
+
+  function pilihJawabanLatih(btn, idx) {
+    playSound('click');
+    const semuaTombol = document.querySelectorAll('#latih-opsi-list .latih-btn');
+    semuaTombol.forEach(b => b.classList.remove('pilih'));
+    btn.classList.add('pilih');
+    latihTerpilih = idx;
+  }
+
+  function nextSoalLatih() {
+    if (latihTerpilih === null) {
+      showDialog("Belum Memilih", "Kamu harus memilih salah satu jawaban sebelum berpindah ke pertanyaan selanjutnya!", "❓");
+      return;
+    }
+
+    // Simpan skor
+    if (latihTerpilih === dtLatih[latihIndex].kunci) {
+      latihSkor++;
+    }
+
+    if (latihIndex < dtLatih.length - 1) {
+      latihIndex++;
+      tampilkanSoalLatih();
+    } else {
+      // Selesai evaluasi
+      clearInterval(latihInterval);
+      selesaiUjianLatih();
+    }
+  }
+
+  function selesaiUjianLatih() {
+    playSound('bintang');
+    const totalSoal = dtLatih.length;
+    const nilaiAkhir = Math.round((latihSkor / totalSoal) * 100);
+    
+    document.getElementById('akhir-nilai').textContent = nilaiAkhir;
+    
+    let keteranganText = "";
+    if (nilaiAkhir >= 80) {
+      keteranganText = `<b>Hebat Sekali!</b> Pemahamanmu terhadap sifat-sifat eksponen dan pangkat pecahan sangat luar biasa. Teruskan performa terbaikmu!`;
+    } else if (nilaiAkhir >= 60) {
+      keteranganText = `<b>Bagus!</b> Pemahamanmu sudah cukup baik, tapi cobalah pelajari kembali bagian eksponen pecahan dan negatif agar nilaimu semakin sempurna.`;
+    } else {
+      keteranganText = `<b>Tetap Semangat!</b> Jangan berkecil hati. Mari buka kembali bagian materi "Belajar" dan berlatihlah kembali agar konsep eksponen ini berhasil kamu kuasai.`;
+    }
+    
+    document.getElementById('akhir-keterangan').innerHTML = keteranganText;
+    goPage('page-skor-akhir');
+  }
+</script>
+</body>
+</html>
